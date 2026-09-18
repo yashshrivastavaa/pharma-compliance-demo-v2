@@ -1,0 +1,754 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ERP Agent — Pharma Exception Voice Agent</title>
+<style>
+  :root{
+    --page:#f6f7fb;
+    --sidebar:#ffffff;
+    --card:#ffffff;
+    --border:#e6e8ef;
+    --text:#111827;
+    --muted:#6b7280;
+    --muted2:#9ca3af;
+    --blue:#2f6fed;
+    --blue-bg:#eaf1ff;
+    --blue-text:#2f6fed;
+    --red:#ef4444;
+    --red-bg:#fdeaea;
+    --red-text:#dc2626;
+    --orange:#f59e0b;
+    --orange-bg:#fdf3e3;
+    --orange-text:#b45309;
+    --green:#10b981;
+    --green-bg:#e1f8ef;
+    --green-text:#059669;
+    --purple:#8b5cf6;
+    --purple-bg:#f1e9fe;
+    --purple-text:#7c3aed;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    background:var(--page);
+    color:var(--text);
+  }
+  .shell{display:flex;min-height:100vh;}
+
+  /* ---------- SIDEBAR ---------- */
+  .sidebar{
+    width:246px;flex-shrink:0;background:var(--sidebar);border-right:1px solid var(--border);
+    display:flex;flex-direction:column;padding:18px 14px;
+  }
+  .brand{display:flex;align-items:center;gap:10px;padding:4px 6px 18px;}
+  .brand .logo{
+    width:34px;height:34px;border-radius:9px;background:#0f1115;color:#fff;
+    display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;flex-shrink:0;
+  }
+  .brand .name{font-size:14px;font-weight:700;line-height:1.2;}
+  .brand .sub{font-size:11px;color:var(--muted);}
+
+  .nav-section{font-size:10.5px;font-weight:700;color:var(--muted2);letter-spacing:.06em;margin:14px 8px 6px;}
+  .nav-item{
+    display:flex;align-items:center;justify-content:space-between;gap:8px;
+    padding:9px 12px;border-radius:9px;margin-bottom:3px;cursor:pointer;
+    font-size:13.5px;font-weight:500;color:#374151;
+  }
+  .nav-item:hover{background:#f3f4f6;}
+  .nav-item .l{display:flex;align-items:center;gap:9px;}
+  .nav-item .ico{width:15px;text-align:center;opacity:.65;font-size:12px;}
+  .nav-item.active{background:var(--blue);color:#fff;}
+  .nav-item.active .ico{opacity:1;}
+  .nav-item.disabled{color:var(--muted2);cursor:default;}
+  .nav-item .count{
+    font-size:11px;font-weight:700;background:var(--red-bg);color:var(--red-text);
+    padding:1px 7px;border-radius:20px;
+  }
+
+  .sidebar-footer{margin-top:auto;padding-top:14px;border-top:1px solid var(--border);}
+  .client-box{padding:8px 6px 12px;}
+  .client-box .lbl{font-size:9.5px;font-weight:700;color:var(--muted2);letter-spacing:.06em;margin-bottom:3px;}
+  .client-box .val{font-size:13px;font-weight:700;}
+  .user-row{display:flex;align-items:center;gap:9px;padding:6px;}
+  .user-row .av{
+    width:30px;height:30px;border-radius:50%;background:var(--blue-bg);color:var(--blue-text);
+    display:flex;align-items:center;justify-content:center;font-size:11.5px;font-weight:700;flex-shrink:0;
+  }
+  .user-row .un{font-size:12.5px;font-weight:700;}
+  .user-row .ur{font-size:11px;color:var(--muted);}
+
+  /* ---------- MAIN ---------- */
+  .main{flex:1;padding:26px 34px 60px;max-width:1280px;}
+  .top{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:wrap;margin-bottom:18px;}
+  h1{font-size:25px;font-weight:800;margin:0;}
+  .top .sub{font-size:12.5px;color:var(--muted);margin-top:5px;}
+  .top-right{text-align:right;}
+  .top-right .meta{font-size:11.5px;color:var(--muted);margin-bottom:8px;}
+  .top-right .meta b{color:var(--text);}
+  .btns{display:flex;gap:8px;}
+  .btn{
+    border-radius:9px;padding:9px 15px;font-size:13px;font-weight:600;cursor:pointer;border:1px solid var(--border);
+    background:#fff;color:var(--text);display:flex;align-items:center;gap:6px;
+  }
+  .btn:hover{background:#f9fafb;}
+  .btn.primary{background:var(--blue);border-color:var(--blue);color:#fff;}
+  .btn.primary:hover{background:#2660d6;}
+  .btn:disabled{opacity:.5;cursor:not-allowed;}
+
+  .pill-row{display:flex;gap:16px;flex-wrap:wrap;align-items:center;margin-bottom:20px;padding-bottom:16px;border-bottom:1px solid var(--border);}
+  .pill{
+    display:flex;align-items:center;gap:6px;font-size:12.5px;color:#374151;cursor:pointer;
+    padding:6px 4px;border-radius:8px;
+  }
+  .pill.active{background:var(--blue);color:#fff;padding:6px 12px;font-weight:600;}
+  .pill .dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
+
+  .stat-row{display:grid;grid-template-columns:repeat(5,1fr);gap:14px;margin-bottom:22px;}
+  @media(max-width:1100px){.stat-row{grid-template-columns:repeat(2,1fr);}}
+  .stat{
+    background:var(--card);border:1px solid var(--border);border-left:4px solid var(--blue);
+    border-radius:12px;padding:16px 16px;
+  }
+  .stat .label{font-size:12px;color:var(--muted);margin-bottom:8px;}
+  .stat .num{font-size:22px;font-weight:800;line-height:1;}
+  .stat .foot{font-size:11px;color:var(--muted);margin-top:8px;line-height:1.5;}
+  .stat.red{border-left-color:var(--red);}
+  .stat.blue{border-left-color:var(--blue);}
+  .stat.green{border-left-color:var(--green);}
+  .stat.purple{border-left-color:var(--purple);}
+  .stat.orange{border-left-color:var(--orange);}
+
+  .card{
+    background:var(--card);border:1px solid var(--border);border-radius:14px;padding:20px 22px;margin-bottom:20px;
+  }
+  .card-head{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px;flex-wrap:wrap;gap:8px;}
+  .card-head h2{font-size:15px;margin:0;font-weight:700;display:flex;align-items:center;gap:7px;}
+  .card-head .hint{font-size:12px;color:var(--muted);}
+
+  .ladder{display:grid;grid-template-columns:1fr 1fr;gap:0;border:1px solid var(--border);border-radius:12px;overflow:hidden;}
+  @media(max-width:700px){.ladder{grid-template-columns:1fr;}}
+  .stage{
+    padding:16px 18px;background:var(--orange-bg);border-right:1px solid #f0e2c6;position:relative;transition:.3s;
+  }
+  .stage:last-child{border-right:none;}
+  .stage.waiting{background:#f9fafb;}
+  .stage.active{background:var(--blue-bg);}
+  .stage.done{background:var(--green-bg);}
+  .stage .st-label{font-size:10.5px;font-weight:700;letter-spacing:.05em;color:var(--muted);text-transform:uppercase;margin-bottom:6px;}
+  .stage .st-title{font-size:14px;font-weight:700;margin-bottom:8px;}
+  .stage .st-status{font-size:12.5px;font-weight:700;margin-bottom:6px;color:var(--muted);}
+  .stage.active .st-status{color:var(--blue-text);}
+  .stage.done .st-status{color:var(--green-text);}
+  .stage .st-meta{font-size:11.5px;color:var(--muted);line-height:1.6;}
+  .stage .pulse{width:8px;height:8px;border-radius:50%;background:var(--blue);display:inline-block;margin-right:6px;animation:pulse 1s infinite;}
+  @keyframes pulse{0%,100%{opacity:1;transform:scale(1);}50%{opacity:.4;transform:scale(1.3);}}
+
+  .ladder-note{font-size:12.5px;color:var(--muted);line-height:1.7;margin-top:14px;}
+  .ladder-note b{color:var(--text);}
+
+  .legend{display:flex;gap:8px;}
+  .legend .chip{font-size:10.5px;font-weight:700;padding:3px 9px;border-radius:20px;}
+
+  .transcript{
+    border:1px solid var(--border);border-radius:12px;background:#fafbfd;padding:14px 16px;
+    max-height:230px;overflow-y:auto;font-size:12.5px;line-height:1.8;
+  }
+  .transcript .line{margin-bottom:4px;opacity:0;animation:fadeIn .35s forwards;}
+  @keyframes fadeIn{to{opacity:1;}}
+  .transcript .who{font-weight:700;}
+  .transcript .who.agent{color:var(--blue-text);}
+  .transcript .who.human{color:var(--purple-text);}
+  .transcript-empty{color:var(--muted2);text-align:center;padding:24px 0;font-size:12.5px;}
+
+  table.evt{width:100%;border-collapse:collapse;font-size:12.5px;}
+  table.evt th{
+    text-align:left;font-size:10.5px;color:var(--muted2);text-transform:uppercase;letter-spacing:.04em;
+    padding:0 10px 10px;font-weight:700;
+  }
+  table.evt td{padding:10px;border-top:1px solid var(--border);vertical-align:top;}
+  table.evt tr:hover td{background:#fafbfd;}
+  .evt-chip{font-size:10.5px;font-weight:700;padding:3px 9px;border-radius:20px;display:inline-block;}
+  .evt-empty td{color:var(--muted2);text-align:center;padding:24px 10px;}
+
+  .badge-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px;}
+  .badge{font-size:11px;padding:5px 10px;border-radius:8px;background:var(--blue-bg);color:var(--blue-text);font-weight:600;}
+
+  .audio-row{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:14px;padding:10px 14px;background:#fafbfd;border:1px solid var(--border);border-radius:10px;}
+  .audio-row .grp{display:flex;align-items:center;gap:7px;font-size:12px;color:var(--muted);}
+  .switch{position:relative;width:34px;height:19px;flex-shrink:0;}
+  .switch input{opacity:0;width:0;height:0;}
+  .switch .slider{position:absolute;inset:0;background:#d1d5db;border-radius:20px;cursor:pointer;transition:.2s;}
+  .switch .slider:before{content:"";position:absolute;width:15px;height:15px;left:2px;top:2px;background:#fff;border-radius:50%;transition:.2s;}
+  .switch input:checked + .slider{background:var(--blue);}
+  .switch input:checked + .slider:before{transform:translateX(15px);}
+  .audio-row select{font-size:11.5px;border:1px solid var(--border);border-radius:7px;padding:4px 6px;background:#fff;color:var(--text);max-width:140px;}
+  .audio-row .replay{border:1px solid var(--border);background:#fff;color:var(--text);font-size:11.5px;font-weight:600;padding:5px 11px;border-radius:7px;cursor:pointer;}
+  .audio-row .replay:hover{background:#f3f4f6;}
+  .audio-row .speaking-ind{font-size:11px;color:var(--blue-text);font-weight:600;display:none;align-items:center;gap:5px;}
+  .audio-row .speaking-ind.on{display:flex;}
+  .audio-row .speaking-ind .bar{width:3px;height:10px;background:var(--blue);border-radius:2px;animation:eq 0.7s infinite ease-in-out;}
+  .audio-row .speaking-ind .bar:nth-child(2){animation-delay:.15s;}
+  .audio-row .speaking-ind .bar:nth-child(3){animation-delay:.3s;}
+  @keyframes eq{0%,100%{transform:scaleY(0.4);}50%{transform:scaleY(1);}}
+
+  .flow-step{display:flex;align-items:flex-start;gap:12px;padding:11px 0;border-bottom:1px solid var(--border);}
+  .flow-step:last-child{border-bottom:none;}
+  .flow-num{width:22px;height:22px;border-radius:50%;background:var(--blue-bg);color:var(--blue-text);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;flex-shrink:0;margin-top:1px;}
+  .flow-step .flabel{font-size:13px;font-weight:600;}
+  .flow-step .flabel small{display:block;color:var(--muted);font-size:11.5px;font-weight:400;margin-top:2px;}
+
+  .tab-view{display:none;}
+  .tab-view.active{display:block;}
+</style>
+</head>
+<body>
+<div class="shell">
+
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+    <div class="brand">
+      <div class="logo">EA</div>
+      <div>
+        <div class="name">ERP Agent</div>
+        <div class="sub">Voice Escalation Demo</div>
+      </div>
+    </div>
+
+    <div class="nav-section">COMMAND</div>
+    <div class="nav-item active" data-view="live">
+      <span class="l"><span class="ico">&#9679;</span> Live Demo</span>
+    </div>
+    <div class="nav-item" data-view="followup">
+      <span class="l"><span class="ico">&#9635;</span> Followup Simulation</span>
+    </div>
+
+    <div class="nav-section">CONFIGURE</div>
+    <div class="nav-item disabled"><span class="l"><span class="ico">&#9881;</span> Agent Setup</span></div>
+    <div class="nav-item disabled"><span class="l"><span class="ico">&#9998;</span> Agent Builder</span></div>
+
+    <div class="sidebar-footer">
+      <div class="client-box">
+        <div class="lbl">CLIENT INSTANCE</div>
+        <div class="val">Nassau Provisions</div>
+      </div>
+      <div class="user-row">
+        <div class="av">YS</div>
+        <div>
+          <div class="un">Yash Shrivastava</div>
+          <div class="ur">AI &amp; Automation Tech Lead</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MAIN -->
+  <div class="main">
+
+    <!-- LIVE DEMO VIEW -->
+    <div class="tab-view active" id="view-live">
+
+      <div class="top">
+        <div>
+          <h1>Pharma Exception Voice Agent</h1>
+          <div class="sub">Nassau Provisions · Supplier COA exceptions · simulated voice escalation (no live telephony)</div>
+        </div>
+        <div class="top-right">
+          <div class="meta">Sequence status<br><b id="seqStatusText">Idle</b></div>
+          <div class="btns">
+            <button class="btn" id="resetBtn1">&#8635; Reset demo</button>
+            <button class="btn primary" id="runBtn1">&#9679; Trigger Call Sequence</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="pill-row" id="scenarioPills">
+        <span class="pill active" data-scenario="coa-missing"><span class="dot" style="background:var(--red)"></span>Supplier COA missing</span>
+        <span class="pill" data-scenario="coa-expired"><span class="dot" style="background:var(--orange)"></span>Supplier COA expired</span>
+      </div>
+
+      <div class="stat-row">
+        <div class="stat red">
+          <div class="label">Exception detected</div>
+          <div class="num" id="statExcType" style="font-size:15px;">COA missing</div>
+          <div class="foot" id="statExcMeta">PO #4471 · Lot 8823</div>
+        </div>
+        <div class="stat blue">
+          <div class="label">Calls placed</div>
+          <div class="num" id="statCalls">0 / 2</div>
+          <div class="foot">In this sequence run</div>
+        </div>
+        <div class="stat orange">
+          <div class="label">Purchase Officer</div>
+          <div class="num" id="statPO" style="font-size:15px;">Waiting</div>
+          <div class="foot">Raj Mehta · Procurement</div>
+        </div>
+        <div class="stat purple">
+          <div class="label">Vendor</div>
+          <div class="num" id="statVendor" style="font-size:15px;">Waiting</div>
+          <div class="foot" id="statVendorName">Meridian Pharma Supply</div>
+        </div>
+        <div class="stat green">
+          <div class="label">Resolution</div>
+          <div class="num" id="statResolution" style="font-size:15px;">Pending</div>
+          <div class="foot">Auto-confirmed on receipt</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-head">
+          <h2>&#9888; Escalation call flow</h2>
+          <div class="hint">Purchase Officer confirms internally, then the vendor is called for resolution</div>
+        </div>
+        <div class="ladder">
+          <div class="stage waiting" id="stage-po">
+            <div class="st-label">Stage 1</div>
+            <div class="st-title">Call Purchase Officer</div>
+            <div class="st-status" id="stagestatus-po">Waiting</div>
+            <div class="st-meta">Internal confirmation before vendor is contacted.</div>
+          </div>
+          <div class="stage waiting" id="stage-vendor">
+            <div class="st-label">Stage 2</div>
+            <div class="st-title" id="stage-vendor-title">Call Vendor</div>
+            <div class="st-status" id="stagestatus-vendor">Waiting</div>
+            <div class="st-meta">Requests corrected/updated Certificate of Analysis.</div>
+          </div>
+        </div>
+        <div class="ladder-note">ERP Agent orchestrates the sequence: on exception detection it places the Purchase Officer call first via <b>GPT-Live-1</b> over the <b>Microsoft Teams Calling Bot</b>, then escalates to the vendor's quality contact for resolution.</div>
+      </div>
+
+      <div class="card">
+        <div class="card-head">
+          <h2>&#128172; Call transcript</h2>
+          <div class="hint">Live simulated conversation, read aloud with two voices</div>
+        </div>
+
+        <div class="audio-row">
+          <div class="grp">
+            <label class="switch">
+              <input type="checkbox" id="audioToggle" checked>
+              <span class="slider"></span>
+            </label>
+            <span>Voice narration</span>
+          </div>
+          <div class="grp">
+            <span>&#128266;</span>
+            <input type="range" id="volumeSlider" min="0" max="1" step="0.05" value="1" style="width:80px;">
+          </div>
+          <button class="replay" id="replayBtn">&#128264; Replay audio</button>
+          <span class="speaking-ind" id="speakingInd"><span class="bar"></span><span class="bar"></span><span class="bar"></span> Speaking…</span>
+        </div>
+
+        <div class="transcript" id="transcript1">
+          <div class="transcript-empty">Transcript will appear here once the sequence starts…</div>
+        </div>
+        <div class="badge-row">
+          <span class="badge">Neural voice narration</span>
+          <span class="badge">Teams Calling Bot</span>
+          <span class="badge">ERP Agent orchestration</span>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- FOLLOWUP SIMULATION VIEW -->
+    <div class="tab-view" id="view-followup">
+
+      <div class="top">
+        <div>
+          <h1>Followup Simulation</h1>
+          <div class="sub">Independent run — trigger this tab live in a follow-up call without resetting the main demo</div>
+        </div>
+        <div class="top-right">
+          <div class="meta">Sequence status<br><b id="seqStatusText2">Idle</b></div>
+          <div class="btns">
+            <button class="btn" id="resetBtn2">&#8635; Reset</button>
+            <button class="btn primary" id="runBtn2">&#9679; Trigger Simulation</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="stat-row">
+        <div class="stat blue">
+          <div class="label">Calls placed</div>
+          <div class="num" id="statCalls2">0 / 2</div>
+          <div class="foot">In this sequence run</div>
+        </div>
+        <div class="stat orange">
+          <div class="label">Purchase Officer</div>
+          <div class="num" id="statPO2" style="font-size:15px;">Waiting</div>
+          <div class="foot">Raj Mehta · Procurement</div>
+        </div>
+        <div class="stat purple">
+          <div class="label">Vendor</div>
+          <div class="num" id="statVendor2" style="font-size:15px;">Waiting</div>
+          <div class="foot" id="statVendorName2">Meridian Pharma Supply</div>
+        </div>
+        <div class="stat green">
+          <div class="label">Resolution</div>
+          <div class="num" id="statResolution2" style="font-size:15px;">Pending</div>
+          <div class="foot">Auto-confirmed on receipt</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-head">
+          <h2>&#9888; Escalation call flow</h2>
+          <div class="hint">Same engine as Live Demo, kept separate for follow-up walkthroughs</div>
+        </div>
+        <div class="ladder">
+          <div class="stage waiting" id="stage-po2">
+            <div class="st-label">Stage 1</div>
+            <div class="st-title">Call Purchase Officer</div>
+            <div class="st-status" id="stagestatus-po2">Waiting</div>
+            <div class="st-meta">Internal confirmation before vendor is contacted.</div>
+          </div>
+          <div class="stage waiting" id="stage-vendor2">
+            <div class="st-label">Stage 2</div>
+            <div class="st-title">Call Vendor</div>
+            <div class="st-status" id="stagestatus-vendor2">Waiting</div>
+            <div class="st-meta">Requests corrected/updated Certificate of Analysis.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-head">
+          <h2>&#128172; Call transcript</h2>
+          <div class="hint">Same voice narration engine, independent run</div>
+        </div>
+        <div class="audio-row">
+          <div class="grp">
+            <label class="switch">
+              <input type="checkbox" id="audioToggle2" checked>
+              <span class="slider"></span>
+            </label>
+            <span>Voice narration</span>
+          </div>
+          <div class="grp">
+            <span>&#128266;</span>
+            <input type="range" id="volumeSlider2" min="0" max="1" step="0.05" value="1" style="width:80px;">
+          </div>
+          <button class="replay" id="replayBtn2">&#128264; Replay audio</button>
+          <span class="speaking-ind" id="speakingInd2"><span class="bar"></span><span class="bar"></span><span class="bar"></span> Speaking…</span>
+        </div>
+        <div class="transcript" id="transcript2">
+          <div class="transcript-empty">Transcript will appear here once the simulation starts…</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-head">
+          <h2>&#128203; Event timeline</h2>
+          <div class="hint">Timestamped log for narrating the demo</div>
+        </div>
+        <table class="evt">
+          <thead><tr><th style="width:90px;">Time</th><th>Event</th></tr></thead>
+          <tbody id="timeline2">
+            <tr class="evt-empty"><td colspan="2">No events yet. Trigger the simulation to populate this log.</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="card">
+        <div class="card-head"><h2>How this maps to production</h2></div>
+        <div class="flow-step">
+          <div class="flow-num">1</div>
+          <div class="flabel">ERP Agent detects exception<small>Missing / expired Certificate of Analysis on PO receipt</small></div>
+        </div>
+        <div class="flow-step">
+          <div class="flow-num">2</div>
+          <div class="flabel">Orchestration decides internal action<small>ERP Agent triggers "call Purchase Officer" tool</small></div>
+        </div>
+        <div class="flow-step">
+          <div class="flow-num">3</div>
+          <div class="flabel">GPT-Live-1 places the call<small>Conversational voice layer via Microsoft Teams Calling Bot</small></div>
+        </div>
+        <div class="flow-step">
+          <div class="flow-num">4</div>
+          <div class="flabel">Escalation to vendor<small>On confirmation, ERP Agent triggers the follow-up call to the vendor's quality contact</small></div>
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+</div>
+
+<script>
+const scenarios = {
+  "coa-missing": {
+    label: "COA missing",
+    meta: "PO #4471 · Lot 8823",
+    title: "Certificate of Analysis (COA) missing on PO receipt",
+    vendor: "Meridian Pharma Supply",
+    poLines: [
+      ["agent","Hi Raj, this is ERP Agent. So, I found a receiving exception on PO 4471 — the Certificate of Analysis for Lot 8823 is missing.","audio/coa-missing-po-1.mp3"],
+      ["human","Yeah, I saw the flag come through. Go ahead and chase the vendor for it.","audio/coa-missing-po-2.mp3"],
+      ["agent","Got it. I'll call Meridian Pharma Supply right now and request the COA for that lot.","audio/coa-missing-po-3.mp3"]
+    ],
+    vendorLines: [
+      ["agent","Hi, this is ERP Agent, calling on behalf of Nassau Provisions about PO 4471. We're missing the Certificate of Analysis for Lot 8823.","audio/coa-missing-vendor-1.mp3"],
+      ["human","Let me check... yeah, that should've gone out with the shipment. I'll get it sent over today.","audio/coa-missing-vendor-2.mp3"],
+      ["agent","Great, thank you. I'll log this as a pending vendor follow-up and let Raj know once it comes in.","audio/coa-missing-vendor-3.mp3"]
+    ]
+  },
+  "coa-expired": {
+    label: "COA expired",
+    meta: "PO #4508 · Lot 9021",
+    title: "Certificate of Analysis (COA) expired on PO receipt",
+    vendor: "Northstar Bio Ingredients",
+    poLines: [
+      ["agent","Hi Raj, ERP Agent here. So, PO 4508 has an exception — the COA on file for Lot 9021 expired last week.","audio/coa-expired-po-1.mp3"],
+      ["human","Good catch. Get an updated cert from Northstar before we release this lot.","audio/coa-expired-po-2.mp3"],
+      ["agent","On it, I'll call Northstar Bio Ingredients right now.","audio/coa-expired-po-3.mp3"]
+    ],
+    vendorLines: [
+      ["agent","Hi, this is ERP Agent, calling about PO 4508. The Certificate of Analysis on file for Lot 9021 has expired — we need a current one.","audio/coa-expired-vendor-1.mp3"],
+      ["human","Understood, our QA team actually re-certified that lot last month. I'll send the renewed COA within the hour.","audio/coa-expired-vendor-2.mp3"],
+      ["agent","Perfect, I'll flag the lot as pending release until it's received and confirmed.","audio/coa-expired-vendor-3.mp3"]
+    ]
+  }
+};
+
+let currentScenario = "coa-missing";
+let running1 = false, running2 = false;
+
+// ---- nav switching ----
+document.querySelectorAll(".nav-item[data-view]").forEach(item=>{
+  item.addEventListener("click",()=>{
+    document.querySelectorAll(".nav-item[data-view]").forEach(n=>n.classList.remove("active"));
+    item.classList.add("active");
+    document.querySelectorAll(".tab-view").forEach(v=>v.classList.remove("active"));
+    document.getElementById("view-"+item.dataset.view).classList.add("active");
+  });
+});
+
+// ---- scenario pills (Live Demo only) ----
+document.querySelectorAll("#scenarioPills .pill").forEach(p=>{
+  p.addEventListener("click",()=>{
+    if(running1) return;
+    document.querySelectorAll("#scenarioPills .pill").forEach(x=>x.classList.remove("active"));
+    p.classList.add("active");
+    currentScenario = p.dataset.scenario;
+    loadScenario();
+  });
+});
+
+function loadScenario(){
+  const s = scenarios[currentScenario];
+  document.getElementById("statExcType").textContent = s.label;
+  document.getElementById("statExcMeta").textContent = s.meta;
+  document.getElementById("statVendorName").textContent = s.vendor;
+  document.getElementById("statVendorName2").textContent = s.vendor;
+}
+
+function setStat(id, text){ const el=document.getElementById(id); if(el) el.textContent = text; }
+function setStage(prefix, cls, status){
+  const stage = document.getElementById("stage-"+prefix);
+  const statusEl = document.getElementById("stagestatus-"+prefix);
+  stage.className = "stage " + cls;
+  statusEl.innerHTML = (cls==="active" ? '<span class="pulse"></span>' : '') + status;
+}
+function appendLine(containerId, who, text, humanLabel){
+  const container = document.getElementById(containerId);
+  const empty = container.querySelector(".transcript-empty");
+  if(empty) empty.remove();
+  const div = document.createElement("div");
+  div.className = "line";
+  const label = who==="agent" ? "ERP Agent" : (humanLabel || "Contact");
+  div.innerHTML = `<span class="who ${who==='agent'?'agent':'human'}">${label}:</span> ${text}`;
+  container.appendChild(div);
+  container.scrollTop = container.scrollHeight;
+}
+
+// ---- voice narration (pre-rendered neural audio: female = ERP Agent, male = human) ----
+let currentAudioEls = {1:null, 2:null};
+let cancelFlags = {1:false, 2:false};
+
+function audioEls(n){
+  const suf = n===1 ? "" : "2";
+  return {
+    toggle: document.getElementById("audioToggle"+suf),
+    volume: document.getElementById("volumeSlider"+suf),
+    ind: document.getElementById("speakingInd"+suf)
+  };
+}
+
+function sleep(ms){ return new Promise(resolve=>setTimeout(resolve, ms)); }
+
+function playAudioLine(n, audioSrc, approxMs){
+  const {toggle, volume, ind} = audioEls(n);
+  return new Promise(resolve=>{
+    if(cancelFlags[n]){ resolve(); return; }
+    if(!toggle || !toggle.checked){
+      setTimeout(resolve, approxMs);
+      return;
+    }
+    const audio = new Audio(audioSrc);
+    audio.volume = volume ? parseFloat(volume.value) : 1;
+    currentAudioEls[n] = audio;
+    if(ind) ind.classList.add("on");
+    const done = ()=>{ if(ind) ind.classList.remove("on"); currentAudioEls[n]=null; resolve(); };
+    audio.addEventListener("ended", done);
+    audio.addEventListener("error", done);
+    audio.play().catch(done);
+  });
+}
+
+function stopAudio(n){
+  if(currentAudioEls[n]){ currentAudioEls[n].pause(); currentAudioEls[n]=null; }
+  const {ind} = audioEls(n);
+  if(ind) ind.classList.remove("on");
+}
+
+function replayTranscriptAudio(n){
+  stopAudio(n);
+  cancelFlags[n] = false;
+  const transcriptId = "transcript"+(n===1?"1":"2");
+  const s = scenarios[currentScenario];
+  const allLines = [...s.poLines, ...s.vendorLines];
+  const rendered = document.querySelectorAll("#"+transcriptId+" .line");
+  (async ()=>{
+    for(let i=0;i<rendered.length && i<allLines.length;i++){
+      if(cancelFlags[n]) break;
+      const [,text,audioSrc] = allLines[i];
+      const approxMs = Math.max(1200, text.length*55);
+      await playAudioLine(n, audioSrc, approxMs);
+      await sleep(200);
+    }
+  })();
+}
+
+function addTimeline(text){
+  const body = document.getElementById("timeline2");
+  const empty = body.querySelector(".evt-empty");
+  if(empty) empty.remove();
+  const now = new Date();
+  const t = now.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  const tr = document.createElement("tr");
+  tr.innerHTML = `<td>${t}</td><td>${text}</td>`;
+  body.appendChild(tr);
+}
+
+function resetTab(n){
+  cancelFlags[n] = true;
+  stopAudio(n);
+  if(n===1){
+    running1=false;
+    document.getElementById("runBtn1").disabled=false;
+    setStage("po","waiting","Waiting");
+    setStage("vendor","waiting","Waiting");
+    setStat("statCalls","0 / 2");
+    setStat("statPO","Waiting");
+    setStat("statVendor","Waiting");
+    setStat("statResolution","Pending");
+    setStat("seqStatusText","Idle");
+    document.getElementById("transcript1").innerHTML = '<div class="transcript-empty">Transcript will appear here once the sequence starts…</div>';
+  } else {
+    running2=false;
+    document.getElementById("runBtn2").disabled=false;
+    setStage("po2","waiting","Waiting");
+    setStage("vendor2","waiting","Waiting");
+    setStat("statCalls2","0 / 2");
+    setStat("statPO2","Waiting");
+    setStat("statVendor2","Waiting");
+    setStat("statResolution2","Pending");
+    setStat("seqStatusText2","Idle");
+    document.getElementById("transcript2").innerHTML = '<div class="transcript-empty">Transcript will appear here once the simulation starts…</div>';
+    document.getElementById("timeline2").innerHTML = '<tr class="evt-empty"><td colspan="2">No events yet. Trigger the simulation to populate this log.</td></tr>';
+  }
+}
+
+async function runSequence(n){
+  if(n===1 && running1) return;
+  if(n===2 && running2) return;
+  if(n===1) running1=true; else running2=true;
+  cancelFlags[n] = false;
+  document.getElementById("runBtn"+n).disabled = true;
+  setStat("seqStatusText"+(n===1?"":"2"), "Running");
+
+  const s = scenarios[currentScenario];
+  const poId = n===1 ? "po" : "po2";
+  const vendorId = n===1 ? "vendor" : "vendor2";
+  const transcriptId = "transcript"+(n===1?"1":"2");
+  document.getElementById(transcriptId).innerHTML = "";
+
+  const suf = n===1 ? "" : "2";
+
+  // ---- Stage 1: Purchase Officer ----
+  setStage(poId,"active","Dialing…");
+  setStat("statPO"+suf,"Dialing…");
+  if(n===2) addTimeline(`<b>ERP Agent</b> calls Purchase Officer (Raj Mehta)`);
+  await sleep(1000);
+  if(cancelFlags[n]) return;
+
+  setStage(poId,"active","Connected");
+  setStat("statPO"+suf,"Connected");
+  setStat("statCalls"+suf,"1 / 2");
+  if(n===2) addTimeline(`Call <b>connected</b> — Purchase Officer`);
+  await sleep(300);
+
+  for(const [who,text,audioSrc] of s.poLines){
+    if(cancelFlags[n]) return;
+    appendLine(transcriptId, who, text, "Purchase Officer");
+    if(n===2) addTimeline(`<b>${who==='agent'?'ERP Agent':'Purchase Officer'}:</b> ${text}`);
+    await playAudioLine(n, audioSrc, Math.max(1200, text.length*55));
+    if(cancelFlags[n]) return;
+    await sleep(250);
+  }
+
+  setStage(poId,"done","Confirmed");
+  setStat("statPO"+suf,"Confirmed");
+  if(n===2) addTimeline(`Purchase Officer call <b>ended</b> — confirmation received`);
+  await sleep(500);
+  if(cancelFlags[n]) return;
+
+  // ---- Stage 2: Vendor ----
+  setStage(vendorId,"active","Dialing…");
+  setStat("statVendor"+suf,"Dialing…");
+  if(n===2) addTimeline(`<b>ERP Agent</b> calls Vendor (${s.vendor})`);
+  await sleep(1000);
+  if(cancelFlags[n]) return;
+
+  setStage(vendorId,"active","Connected");
+  setStat("statVendor"+suf,"Connected");
+  setStat("statCalls"+suf,"2 / 2");
+  if(n===2) addTimeline(`Call <b>connected</b> — Vendor`);
+  await sleep(300);
+
+  for(const [who,text,audioSrc] of s.vendorLines){
+    if(cancelFlags[n]) return;
+    appendLine(transcriptId, who, text, "Vendor Contact");
+    if(n===2) addTimeline(`<b>${who==='agent'?'ERP Agent':'Vendor Contact'}:</b> ${text}`);
+    await playAudioLine(n, audioSrc, Math.max(1200, text.length*55));
+    if(cancelFlags[n]) return;
+    await sleep(250);
+  }
+
+  setStage(vendorId,"done","Confirmed");
+  setStat("statVendor"+suf,"Confirmed");
+  setStat("statResolution"+suf,"Resolved");
+  setStat("seqStatusText"+suf,"Complete");
+  if(n===2) addTimeline(`Vendor call <b>ended</b> — resolution pending, ERP Agent will confirm on receipt`);
+
+  if(n===1) running1=false; else running2=false;
+  document.getElementById("runBtn"+n).disabled = false;
+}
+
+document.getElementById("runBtn1").addEventListener("click", ()=>runSequence(1));
+document.getElementById("runBtn2").addEventListener("click", ()=>runSequence(2));
+document.getElementById("resetBtn1").addEventListener("click", ()=>resetTab(1));
+document.getElementById("resetBtn2").addEventListener("click", ()=>resetTab(2));
+
+document.getElementById("replayBtn").addEventListener("click", ()=>replayTranscriptAudio(1));
+document.getElementById("replayBtn2").addEventListener("click", ()=>replayTranscriptAudio(2));
+document.getElementById("audioToggle").addEventListener("change",(e)=>{ if(!e.target.checked) stopAudio(1); });
+document.getElementById("audioToggle2").addEventListener("change",(e)=>{ if(!e.target.checked) stopAudio(2); });
+
+loadScenario();
+</script>
+</body>
+</html>
